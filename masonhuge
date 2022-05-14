@@ -1,0 +1,101 @@
+--auto farm spins
+
+local OnlyFarmSpins = false -- Set this to true if you only want to collect spins
+local WantedMagics = {"Time","","","","","","","","",""} -- Put what elements you want between the quotation marks
+local WantedRarities = {"Heavenly","","","","",""} -- Put the name of the rarities you want between the quotation marks
+
+-- Script will stop rolling if a wanted rarity or wanted magic is rolled. You can change between the quotation marks to whatever you want in the list below, as long as it's in the right category
+
+
+--[[
+
+   RARITIES:
+   - Common
+   - Uncommon
+   - Rare
+   - Exotic
+   - Legendary
+   - Heavenly
+
+   ELEMENTS (AT TIME OF WRITING):
+   Common Elements:
+   - Fire
+   - Water
+   - Lightning
+   Uncommon Elements:
+   - Wind
+   - Earth
+   Rare Elements:
+   - Light
+   - Darkness
+   - Metal
+   Exotic Elements:
+   - Eclipse
+   - Blood
+   Legendary Elements:
+   - Celestial
+   Heavenly Elements:
+   - Reality Collapse
+   - Time
+
+--]]
+
+
+if game.Players.LocalPlayer == nil then
+   game.Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+end
+
+for i,v in pairs(getconnections(game:GetService("Players").LocalPlayer.Idled)) do
+   v:Disable()
+end
+
+local Debounce = false
+
+game:GetService('RunService').Stepped:connect(function()
+   if not Debounce and game.Players.LocalPlayer:FindFirstChild("PlayerGui") and game.Players.LocalPlayer.PlayerGui:FindFirstChild("MainGUI") then
+       Debounce = true
+       wait(0.1)
+       if game.Players.LocalPlayer.PlayerGui.MainGUI:FindFirstChild("Start") and game.Players.LocalPlayer.PlayerGui.MainGUI.Start:FindFirstChild("PlayButton") then
+           pcall(function()
+               local Events = getconnections(game.Players.LocalPlayer.PlayerGui.MainGUI.Start.PlayButton.MouseButton1Click)
+               for i,v in pairs(Events) do
+                   v:Fire()
+               end
+           end)
+           --game.ReplicatedStorage.Events.Spawn:FireServer()
+       elseif game.Players.LocalPlayer.PlayerGui.MainGUI:FindFirstChild("StatsGUI") then
+           if game.Players.LocalPlayer.PlayerGui.MainGUI.StatsGUI:FindFirstChild("Level") and game.Players.LocalPlayer.PlayerGui.MainGUI.StatsGUI.Level:FindFirstChild("Level") then
+               local Level = tonumber(game.Players.LocalPlayer.PlayerGui.MainGUI.StatsGUI.Level.Level.Text)
+               if Level ~= nil and Level <= 1 then
+                   local Tool = game.Players.LocalPlayer.Backpack:FindFirstChildOfClass("Tool") or game.Players.LocalPlayer.Character:FindFirstChildOfClass("Tool")
+                   if Tool ~= nil then
+                       Tool.Parent = game.Players.LocalPlayer.Character
+                       Tool:Activate()
+                       Tool:Deactivate()
+                       wait(0.1)
+                   end
+               elseif Level ~= nil and Level > 0 and Level > 1 and Level < 900 then
+                   wait(1)
+                   if Level < 2 then
+                       Debounce = false
+                       return
+                   end
+                   local Magic, Rarity = game:GetService("ReplicatedStorage").Events.Spin:InvokeServer(false)
+                   print("Rolled "..Magic.." with a rarity of "..Rarity)
+                   if table.find(WantedMagics,Magic) or table.find(WantedRarities,Rarity) then
+                       if OnlyFarmSpins == false then
+                           game.Players.LocalPlayer.Character:BreakJoints()
+                           Debounce = true
+                           return
+                       end
+                   end
+                   game.Players.LocalPlayer.Character:BreakJoints()
+                   game.Players.LocalPlayer.CharacterAdded:Wait()
+               elseif Level > 900 then
+                   game.Players.LocalPlayer.Character:BreakJoints()
+               end
+           end
+       end
+       Debounce = false
+   end
+end)
